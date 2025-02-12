@@ -10,12 +10,17 @@
 #define TASK_RESET_PERIOD_MS    2000      
 #define MAIN_DELAY_MS           10000
 
+
+
 extern "C" void app_main(void)
 {	
     esp_task_wdt_config_t config = {
 		.timeout_ms = TWDT_TIMEOUT_MS,
 		.idle_core_mask = 0, 
-		.trigger_panic= 0 
+		.trigger_panic= false
 	};
-    esp_err_t err = esp_task_wdt_init(&config);
+    //esp_err_t err = esp_task_wdt_init(&config);
+
+    ESP_ERROR_CHECK_WITHOUT_ABORT(esp_task_wdt_init(&config));
+
 };
