@@ -12,8 +12,7 @@ private:
     bool active_high;   // True om knappen är aktiv hög, annars aktiv låg
     bool last_stable_state;
     bool current_state;
-    bool onPressed;
-    bool onReleased;
+    bool buttonReleased;
     TickType_t startTickButton;
     //const TickType_t debounce_delay = pdMS_TO_TICKS(10); //debounce
 

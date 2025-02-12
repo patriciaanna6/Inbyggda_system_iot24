@@ -1,6 +1,12 @@
 #include "Button.h"
 #include <stdio.h>
 
+extern "C" {
+    #include "freertos/FreeRTOS.h"
+    #include "freertos/task.h"
+    #include "freertos/mpu_wrappers.h"
+}
+
 
 
 Button::Button(gpio_num_t pin, bool active_high) : pin(pin), active_high(active_high) {}
@@ -39,12 +45,12 @@ void Button::update (){
         this->buttonReleased = true;
         this->startTickButton = xTaskGetTickCount();
 
-        this->onPressed(this->pin);
+        //this->onPressed(this->pin);
     }
     if(gpio_level == 0 && buttonReleased == true){
-        TickType_t timesSincePressed = xTaskGetTickCount() - startTickButton;
+        TickType_t timeSincePressed = xTaskGetTickCount() - startTickButton;
         if(timeSincePressed >= pdMS_TO_TICKS(10)){
-            this->onReleased(this->pin);
+            //this->onReleased(this->pin);
 
             this->buttonReleased = false;
             this->startTickButton = xTaskGetTickCount();

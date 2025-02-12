@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "binary_led.h"
-#include "Button.h"
+#include "button.h"
 
 extern "C" void app_main(void)
 {
