@@ -1,17 +1,17 @@
 #include <stdio.h>
 #include "binary_led.h"
+#include "driver/gpio.h"
+#include "driver/ledc.h"
+#include "freertos/FreeRTOS.h"
 
-#define CONFIG_LOG_MAXIMUM_LEVEL 4
+
+#define LED_PIN GPIO_NUM_2 
 
 
 void init(int pin){
-    //ESP_LOGI(TAG, "Example configured to blink GPIO LED!");
-    //gpio_reset_pin(BLINK_GPIO);
- 
-    //gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
-   
+    gpio_set_direction((gpio_num_t)pin, GPIO_MODE_OUTPUT);
+    
 }
-
 
 void update(){
     //void;
@@ -26,4 +26,15 @@ void blink(int ms_on, int ms_off){
 
 }
 
+/*void app_main() {
+    init(LED_PIN);  // Initiera LED på definierad pin
+    
+    while (1) {
+        gpio_set_level(LED_PIN, 1);  // Tänd LED
+        vTaskDelay(pdMS_TO_TICKS(1000));  // Vänta 1 sekund
+        
+        gpio_set_level(LED_PIN, 0);  // Släck LED
+        vTaskDelay(pdMS_TO_TICKS(1000));  // Vänta 1 sekund
+    }
+}*/
 
