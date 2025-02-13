@@ -28,19 +28,19 @@ void Button::init() {
 void Button::update (){
     int gpio_level = gpio_get_level(this->pin); //Läs ut GRPIO-nivån
 
-    if(gpio_level == 1 && !this->buttonReleased){
+    if(gpio_level == 1 && !this->buttonReleased){ //Om det finns ström gpio level = 1
 
-        this->buttonReleased = true;
+        this->buttonReleased = true; //Knappen ej tryck
         this->startTickButton = xTaskGetTickCount();
     }
-    else if(gpio_level == 0 && this->buttonReleased){
+    else if(gpio_level == 0 && this->buttonReleased){ //Om det inte finns ström gpio level = 0
         TickType_t timeSincePressed = xTaskGetTickCount() - startTickButton;
         if(timeSincePressed >= pdMS_TO_TICKS(10)){
             printf("Knappen är nedtryckt!\n");
             
             //this->onReleased(this->pin);
 
-            this->buttonReleased = false;
+            this->buttonReleased = false; //Knappen tryck
             this->startTickButton = xTaskGetTickCount();
         }
     }

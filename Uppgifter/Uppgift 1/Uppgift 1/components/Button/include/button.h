@@ -24,7 +24,6 @@ public:
 
     void update();
 
-    // Kontrollera om knappen är tryckt
     bool is_pressed();
 };
 

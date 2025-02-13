@@ -12,7 +12,7 @@ extern "C" void app_main(void){
     while (1){
         myButton.update();
 
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
 
     }
