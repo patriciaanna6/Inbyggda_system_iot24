@@ -1,34 +1,40 @@
 #include "Button.h"
 #include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/mpu_wrappers.h"
 
 extern "C" {
-    #include "freertos/FreeRTOS.h"
-    #include "freertos/task.h"
-    #include "freertos/mpu_wrappers.h"
+
 }
 
 
 
-Button::Button(gpio_num_t pin, bool active_high) : pin(pin), active_high(active_high) {}
+Button::Button(gpio_num_t pin, bool active_high) : pin(pin), active_high(active_high), buttonReleased(false), startTickButton(0) {}
 
 // Initieringsmetod för att konfigurera ESP-IDF GPIO-inställningar
 void Button::init() {
     gpio_config_t buttonConfig;
-    buttonConfig.mode = GPIO_MODE_INPUT;              // Ställ in som ingång
-    buttonConfig.intr_type = GPIO_INTR_DISABLE;       // Inga avbrott
-    buttonConfig.pin_bit_mask = (1ULL << pin);        // Välj rätt pin
+        buttonConfig.mode = GPIO_MODE_INPUT;
+        buttonConfig.intr_type = GPIO_INTR_DISABLE;
+        buttonConfig.pin_bit_mask = (1ULL << pin);
+        buttonConfig.pull_up_en = GPIO_PULLUP_DISABLE;
+        buttonConfig.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    //buttonConfig.mode = GPIO_MODE_INPUT;              // Ställ in som ingång
+    //buttonConfig.intr_type = GPIO_INTR_DISABLE;       // Inga avbrott
+    //buttonConfig.pin_bit_mask = (1ULL << pin);        // Välj rätt pin
 
     // Ställ in pull-up eller pull-down baserat på aktiv hög/låg
-    if (active_high){
-        buttonConfig.pull_up_en = GPIO_PULLUP_ENABLE;
-    }else {
-        buttonConfig.pull_up_en = GPIO_PULLUP_DISABLE;
-    }
-    if (active_high){
-        buttonConfig.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    }else{
-        buttonConfig.pull_down_en = GPIO_PULLDOWN_ENABLE;
-    }
+   //if (active_high){
+        //buttonConfig.pull_up_en = GPIO_PULLUP_ENABLE;
+    //}else {
+        //buttonConfig.pull_up_en = GPIO_PULLUP_DISABLE;
+    //}
+    //if (active_high){
+        //buttonConfig.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    //}else{
+        //buttonConfig.pull_down_en = GPIO_PULLDOWN_ENABLE;
+    //}
     esp_err_t error = gpio_config(&buttonConfig);
 
     if (error != ESP_OK) {
@@ -37,19 +43,20 @@ void Button::init() {
 }
 
 void Button::update (){
-    gpio_num_t gpio_pin_number = (gpio_num_t)this->pin;
-    int gpio_level = gpio_get_level(gpio_pin_number);
+    int gpio_level = gpio_get_level(this->pin);
 
-    if(gpio_level == 1 && this->buttonReleased == false){
+    if(gpio_level == 1 && !this->buttonReleased){
 
         this->buttonReleased = true;
         this->startTickButton = xTaskGetTickCount();
 
         //this->onPressed(this->pin);
     }
-    if(gpio_level == 0 && buttonReleased == true){
+    else if(gpio_level == 0 && this->buttonReleased){
         TickType_t timeSincePressed = xTaskGetTickCount() - startTickButton;
         if(timeSincePressed >= pdMS_TO_TICKS(10)){
+            printf("Knappen är nedtryckt!\n");
+            
             //this->onReleased(this->pin);
 
             this->buttonReleased = false;
