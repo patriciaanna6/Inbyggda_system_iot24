@@ -13,8 +13,9 @@ private:
     bool last_stable_state;
     bool current_state;
     bool buttonReleased;
+    bool released;
     TickType_t startTickButton;
-    //const TickType_t debounce_delay = pdMS_TO_TICKS(10); //debounce
+   
 
 public:
     Button(gpio_num_t pin, bool active_high = false);
