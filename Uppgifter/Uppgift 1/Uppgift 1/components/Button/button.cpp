@@ -8,7 +8,7 @@ extern "C" {
 
 }
 
-Button::Button(gpio_num_t pin, bool active_high) : pin(pin), active_high(active_high), buttonReleased(false), startTickButton(0) {}
+Button::Button(gpio_num_t pin) : pin(pin), buttonReleased(false), startTickButton(0) {}
 
 // Initieringsmetod för att konfigurera ESP-IDF GPIO-inställningar
 void Button::init() {
@@ -32,17 +32,21 @@ void Button::update (){
 
         this->buttonReleased = true; //Knappen ej tryck
         this->startTickButton = xTaskGetTickCount();
+
+        if(this->onPressedCallback){ //Kontrollerar att callback är satt
+            this->onPressedCallback(this->pin);
+        }
     }
     else if(gpio_level == 0 && this->buttonReleased){ //Om det inte finns ström gpio level = 0
         TickType_t timeSincePressed = xTaskGetTickCount() - startTickButton;
         if(timeSincePressed >= pdMS_TO_TICKS(10)){
-            printf("Knappen är nedtryckt!\n");
+        
             
             //this->onReleased(this->pin);
 
             this->buttonReleased = false; //Knappen tryck
             this->startTickButton = xTaskGetTickCount();
-        }
+       } 
     }
 
 
@@ -50,10 +54,11 @@ void Button::update (){
 // Kontrollera om knappen är tryckt
 bool Button::is_pressed() {
     return !this->released;
-
 }
 
-
+void Button::setOnPressed(void(*callback)(int pin)){
+    this->onPressedCallback = callback;
+}
 
 
 

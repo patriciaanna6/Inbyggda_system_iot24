@@ -1,40 +1,33 @@
 #include <stdio.h>
-#include "binary_led.h"
-#include "driver/gpio.h"
-#include "driver/ledc.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_log.h"
+#include "binary_led.h"
 
+static const char *TAG = "example"; //for printing 
 
-#define LED_PIN GPIO_NUM_2 
+void BinaryLed::init(gpio_num_t pin_input)
+{
+    ESP_LOGI(TAG, "Example configured to blink GPIO LED!");
 
+    this->pin = pin_input;
 
-void init(int pin){
-    gpio_set_direction((gpio_num_t)pin, GPIO_MODE_OUTPUT);
-    
-}
-
-void update(){
-    //void;
-}
-
-void setLed(int pin, int state){
-
-}
-
-void blink(int ms_on, int ms_off){
-    //gpio_set_level(BLINK_GPIO, s_led_state); 
-
-}
-
-/*void app_main() {
-    init(LED_PIN);  // Initiera LED på definierad pin
-    
-    while (1) {
-        gpio_set_level(LED_PIN, 1);  // Tänd LED
-        vTaskDelay(pdMS_TO_TICKS(1000));  // Vänta 1 sekund
-        
-        gpio_set_level(LED_PIN, 0);  // Släck LED
-        vTaskDelay(pdMS_TO_TICKS(1000));  // Vänta 1 sekund
+    gpio_reset_pin(pin); //Reset the GPIO to its default state
+    gpio_set_direction(pin, GPIO_MODE_OUTPUT); //Set the GPIO as a output
     }
-}*/
+
+    //void update - ingen aning
+
+    void BinaryLed::setLed(bool led_state)
+    {
+        gpio_set_level(this->pin, led_state);
+    }
+    void BinaryLed::blink(int milliseconds_on, int milliseconds_off)
+    {
+        gpio_set_level(this->pin, 1); //Lights on
+        vTaskDelay(milliseconds_on / portTICK_PERIOD_MS); //delay
+        gpio_set_level(this->pin, 0); //Lights off 
+        vTaskDelay(milliseconds_off / portTICK_PERIOD_MS);
+    }
+
 

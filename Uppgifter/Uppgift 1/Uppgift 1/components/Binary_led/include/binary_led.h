@@ -1,5 +1,13 @@
+#include "driver/gpio.h"
 
-void init(int pin);
-void update();
-void setLed(int pin, int state);
-void blink(int ms_on, int ms_off);
+class BinaryLed
+{
+    private:
+    gpio_num_t pin; 
+    
+    public:
+    void init(gpio_num_t pin_input); //input
+    //void update
+    void setLed(bool led_state); //Set GPIO level to input value
+    void blink(int milliseconds_on, int milliseconds_off);
+};
