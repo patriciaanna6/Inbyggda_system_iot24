@@ -6,12 +6,7 @@
  
  
 static const char *TAG = "AnalogLed";
- 
-#define DUTY_CYCLE_MAX 200
-#define DUTY_CYCLE_MIN 0
-#define DUTY_CYCLE_RANGE (DUTY_CYCLE_MAX - DUTY_CYCLE_MIN)
- 
- 
+  
 // Initialize the LED configuration
 void AnalogLed::init(gpio_num_t pin)
 {
@@ -41,13 +36,34 @@ void AnalogLed::init(gpio_num_t pin)
     ledc_channel_config(&ledc_channel);
 }
  
-// void update. ingen aning vad den gör
+void AnalogLed::update()
+{
+    
+    if(increasing){
+        current_duty += DUTY_STEP;
+        if(current_duty >= DUTY_CYCLE_MAX){ 
+            current_duty = DUTY_CYCLE_MAX;
+            increasing = false; 
+        }
+    } else {
+        current_duty -= DUTY_STEP;
+        if(current_duty <= DUTY_CYCLE_MIN) {
+            current_duty = DUTY_CYCLE_MIN;
+            increasing = true;
+        }
+    }
+    ledc_set_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel, current_duty);
+    ledc_update_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel);
+    ESP_LOGI(TAG, "LED PWM Duty Cycle: %d", current_duty);
+    //vTaskDelay(pdMS_TO_TICKS(50)); //Adjust speed of brightness
+}
  
 // Set the duty cycle of the PWM signal on the LED
 void AnalogLed::setLed(int value)
 {
     ledc_set_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel, value);
     ledc_update_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel);
+    ESP_LOGI(TAG, "Set LED PWM duty Cycle to: %d", value);
 }
  
 // Create a sin wave with the LED. Period in ms
@@ -57,19 +73,5 @@ void AnalogLed::sin(int period)
  
     int delay = (period / 2) / DUTY_CYCLE_RANGE;
  
-    for (int i = 0; i < 5; i++) {
-        // Brightness decreasing from max to min
-        for (int dutyCycle = DUTY_CYCLE_MAX; dutyCycle >= DUTY_CYCLE_MIN; dutyCycle--) {
-            ledc_set_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel, dutyCycle);
-            ledc_update_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel);
-            vTaskDelay(pdMS_TO_TICKS(delay));  // Delay to control dimming speed
-        }
- 
-        // Brightness increasing from min to max
-        for (int dutyCycle = DUTY_CYCLE_MIN; dutyCycle < DUTY_CYCLE_MAX; dutyCycle++) {
-            ledc_set_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel, dutyCycle);
-            ledc_update_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel);
-            vTaskDelay(pdMS_TO_TICKS(delay));  // Delay to control dimming speed
-        }
-    }
+
 }
