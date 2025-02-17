@@ -1,33 +1,41 @@
 #include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "esp_log.h"
 #include "binary_led.h"
 
-static const char *TAG = "example"; //for printing 
+static const char *TAG = "BinaryLed"; //for printing 
 
-void BinaryLed::init(gpio_num_t pin_input)
-{
-    ESP_LOGI(TAG, "Example configured to blink GPIO LED!");
-
+void BinaryLed::init(gpio_num_t pin_input){
+    ESP_LOGI(TAG, "Initializing LED on GPIO %d", pin_input);
     this->pin = pin_input;
 
-    gpio_reset_pin(pin); //Reset the GPIO to its default state
-    gpio_set_direction(pin, GPIO_MODE_OUTPUT); //Set the GPIO as a output
+    gpio_reset_pin(this->pin); //Reset the GPIO to its default state
+    gpio_set_direction(this->pin, GPIO_MODE_OUTPUT); //Set the GPIO as a output
+    last_toggle_time = xTaskGetTickCount();
     }
 
-    //void update - ingen aning
+    void BinaryLed::update(){
+        TickType_t now = xTaskGetTickCount();
+        int interval = led_state ? blink_on_time : blink_off_time;
+
+        if(now - last_toggle_time >= interval/portTICK_PERIOD_MS){
+            led_state = !led_state;
+            gpio_set_level(this->pin, led_state); //Lights on or off
+            ESP_LOGI(TAG, "LED STATE: %d", led_state);
+            last_toggle_time = now;
+        }
+
+    }
 
     void BinaryLed::setLed(bool led_state)
     {
+        this->led_state = led_state;
         gpio_set_level(this->pin, led_state);
+        ESP_LOGI(TAG, "SET LED TO:%d", led_state);
     }
-    void BinaryLed::blink(int milliseconds_on, int milliseconds_off)
-    {
-        gpio_set_level(this->pin, 1); //Lights on
-        vTaskDelay(milliseconds_on / portTICK_PERIOD_MS); //delay
-        gpio_set_level(this->pin, 0); //Lights off 
-        vTaskDelay(milliseconds_off / portTICK_PERIOD_MS);
+    void BinaryLed::blink(int milliseconds_on, int milliseconds_off){
+        blink_on_time = milliseconds_on;
+        blink_off_time = milliseconds_off;
+       
     }
 
 

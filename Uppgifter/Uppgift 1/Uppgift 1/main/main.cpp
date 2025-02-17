@@ -10,15 +10,23 @@ void buttonPressedCallback(int pin){
 }
 
 extern "C" void app_main(void){
-    Button myButton(GPIO_NUM_3);
-    myButton.init();
-    myButton.setOnPressed(buttonPressedCallback);
+    //Button myButton(GPIO_NUM_3);
+    //myButton.init();
+    //myButton.setOnPressed(buttonPressedCallback);
 
+    //while (1){
+    //    myButton.update();
+    //    vTaskDelay(pdMS_TO_TICKS(10));
+    //}
+
+    BinaryLed binary_led;
+    binary_led.init(GPIO_NUM_4);
+    binary_led.blink(1000,1000);
+    binary_led.setLed(true);
     while (1){
-        myButton.update();
+        binary_led.update();
         vTaskDelay(pdMS_TO_TICKS(10));
     }
-
 
 //init(3);
 //update();
