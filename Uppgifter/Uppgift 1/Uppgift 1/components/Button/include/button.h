@@ -9,12 +9,12 @@
 class Button {
 private:
     gpio_num_t pin;     
-    bool last_stable_state;
-    bool current_state;
+    //bool last_stable_state;
+    //bool current_state;
     bool buttonReleased;
-    bool released;
+    //bool released;
     TickType_t startTickButton;
-    void(*onPressedCallback)(int pin) = nullptr;
+    void(*onPressedCallback)(int pin) = nullptr; //function inside a function dvs pass function as an argument
    
 
 public:
