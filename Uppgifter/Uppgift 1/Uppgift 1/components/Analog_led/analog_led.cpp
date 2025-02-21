@@ -11,14 +11,14 @@ void AnalogLed::init(gpio_num_t pin)
 {
     ESP_LOGI(TAG, "Initializing AnalogLed on GPIO %d", pin);
     this->pin = pin;
-    
+
     // Configure the PWM timer
     this->ledc_timer = {
         .speed_mode = LEDC_LOW_SPEED_MODE,    // Use low-speed mode
         .duty_resolution = PWM_RESOLUTION,    // Resolution
         .timer_num = PWM_TIMER,               // Timer number
         .freq_hz = PWM_FREQ,                  // Frequency
-        .clk_cfg = LEDC_AUTO_CLK             // Use the internal clock
+        .clk_cfg = LEDC_AUTO_CLK              // Use the internal clock
     };
     ledc_timer_config(&ledc_timer);
 
@@ -35,52 +35,64 @@ void AnalogLed::init(gpio_num_t pin)
     ledc_channel_config(&ledc_channel);
 }
 
-// Decrease or increase the brightness of the LED
+// Decrease or increase the brightness of the LED (sinusoidal behavior)
 void AnalogLed::update()
 {
-    TickType_t now = xTaskGetTickCount();
+    if (!is_running) { // If is_running is false, LED should remain constant
+        return;
+    }
 
-    if(now - this->last_update_time >= this->interval_per_step){ // Check if it's time to update
-        if(this->is_going_up){
+    TickType_t now = xTaskGetTickCount()
+;
+    if (now - this->last_update_time >= this->interval_per_step) { // Check if it's time to update
+        if (this->is_going_up) {
+            this->ledc_channel.duty = this->ledc_channel.duty + DUTY_CYCLE_STEP;
             ESP_LOGI(TAG, "GOING UP %lu", this->ledc_channel.duty);
-            setLed(this->ledc_channel.duty + DUTY_CYCLE_STEP);
+            ledc_set_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel, this->ledc_channel.duty); // Setting the value as PWM duty
+            ledc_update_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel);
             
             // Check if it's time to flip the direction
-            if(this->ledc_channel.duty >= DUTY_CYCLE_MAX){
-                this->is_going_up = 0; // Flip the direction
+            if (this->ledc_channel.duty >= DUTY_CYCLE_MAX) {
+                this->is_going_up = false; // Flip the direction
+                if (this->run_once) {
+                    this->is_running = false;  // Stop the sinusoidal behavior
+                }
             }
         } else {
+            this->ledc_channel.duty = this->ledc_channel.duty - DUTY_CYCLE_STEP;
             ESP_LOGI(TAG, "GOING DOWN %lu", this->ledc_channel.duty);
-            setLed(this->ledc_channel.duty - DUTY_CYCLE_STEP);
-
+            ledc_set_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel, this->ledc_channel.duty); // Setting the value as PWM duty
+            ledc_update_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel);
+            
             // Check if it's time to flip the direction
-            if(this->ledc_channel.duty <= DUTY_CYCLE_MIN){
-                this->is_going_up = 1; // Flip the direction
+            if (this->ledc_channel.duty <= DUTY_CYCLE_MIN) {
+                this->is_going_up = true; // Flip the direction
+                if (this->run_once) {
+                    this->is_running = false;  // Stop the sinusoidal behavior
+                }
             }
         }
-        this->last_update_time = now; // Set current time for the next update/reset the timer. 
+        this->last_update_time = now; // Set current time for the next update
     }
 }
 
-// Set the duty cycle of the PWM signal on the LED
+// Set the duty cycle of the PWM signal on the LED instantly
 void AnalogLed::setLed(int value)
 {
-    this->ledc_channel.duty = value;
-    ledc_set_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel, value); //Setting the value as PWM duty
-    ledc_update_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel);
+    if (value >= DUTY_CYCLE_MIN && value <= DUTY_CYCLE_MAX) {
+        this->ledc_channel.duty = value;  // Set the duty to the given value
+        ledc_set_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel, this->ledc_channel.duty);  // Update the PWM duty cycle
+        ledc_update_duty(this->ledc_channel.speed_mode, this->ledc_channel.channel);  // Apply the duty update
+        this->is_running = false;  // Stop sinusoidal behavior
+        ESP_LOGI(TAG, "Set LED to %d", value);
+    }
 }
 
 // Set period for a sin wave with the LED. Period in ms
 void AnalogLed::sin(int period) // In ms    
 {
     ESP_LOGI(TAG, "LED in sin wave");
-    
     // interval_per_step is how long we should wait before we change the LED brightness
-    // How to calculate:
-    // If period is 1 second, then the led will decrease brightness in 0.5 seconds and increase brightness in 0.5 seconds
-    // During decrease, LED will start from max (200) down to min (0). Every step is 10
-    // So, there is 20 steps in 0.5 seconds. So, 40 steps in 1 second
-    // 1 second = 1000 ms. 1 way is (1000/2)=500ms
-    // Then 500ms / 20 steps = 25ms per step
     this->interval_per_step = pdMS_TO_TICKS((period / 2) / (DUTY_CYCLE_RANGE / DUTY_CYCLE_STEP));
+    this->is_running = true;  // Enable sinusoidal behavior
 }

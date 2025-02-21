@@ -21,8 +21,10 @@ static const char *TAG = "example"; //for printing only
 void buttonPressedCallback(int pin){
     printf("Hello Philippines\n");
 }
-void thresholdCrossedCallback(int pin_adc, int value){
-    ESP_LOGI(TAG, "Callback: threshold crossed in pin %d value %d\n", pin_adc, value);
+
+void thresholdCrossedCallback(int pin_adc, int value)
+{
+    ESP_LOGI("Potentiometer", "Callback: threshold crossed in pin %d\n", pin_adc);
 }
 
 extern "C" void app_main(void){
@@ -31,32 +33,37 @@ extern "C" void app_main(void){
     myButton.init();
     myButton.setOnPressed(buttonPressedCallback);*/
 
-    //Test BinaryLed
+    /*Test BinaryLed
     ESP_LOGI(TAG, "Init BinaryLed");
     BinaryLed led_B;
     led_B.init(BLINK_GPIO);
-    led_B.blink(1000, 100); // Blink 1 second on, 1 second off
+    led_B.setLed(1);
+    led_B.blink(1000, 1000); // Blink 1 second on, 1 second off*/
 
-    led_B.setLed(0);
+
 
     /*Test AnalogLed
     ESP_LOGI(TAG, "Init AnalogLed");
     AnalogLed led_A;
     led_A.init(SIN_GPIO);
-    led_A.sin(100); // Sin wave with 4 seconds period (2 seconds up, 2 seconds down)
-    led_A.setLed(200);*/
+    led_A.setLed(200);
+    led_A.sin(10000);// Sin wave with 4 seconds period (2 seconds up, 2 seconds down)*/
 
-    /*Test Potentiometer
+    
+
+    //Test Potentiometer
     ESP_LOGI(TAG, "Init Potentiometer");
     Potentiometer pot;
     pot.init(POTENTIOMETER_GPIO);
-    pot.setOnThreshold(2000, true, thresholdCrossedCallback);*/
+    pot.setOnThreshold(2000, false, thresholdCrossedCallback);
+
 
     while(1) {
         //myButton.update();
-        led_B.update(); //binary_led
+        //led_B.update(); //binary_led
         //led_A.update(); //analog_led
-        //pot.update(); //potentiometer
+        pot.update(); //potentiometer
+        ESP_LOGI(TAG, "POT: %d", pot.getValue());
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 

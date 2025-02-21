@@ -2,36 +2,43 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
-#include "potentiometer.h"
+#include "Potentiometer.h"
 
 static const char *TAG = "Potentiometer";
-
 
 void Potentiometer::init(adc1_channel_t adc_pin)
 {
     this->adc_pin = adc_pin;
-    //adc1_config_width(ADC_WIDTH_BIT_12);
-    //adc1_config_channel_atten(adc1_channel_t channel, adc_atten_t atten);
+    adc1_config_width(ADC_WIDTH_BIT_12);
+    adc1_config_channel_atten(adc_pin, ADC_ATTEN_DB_0);
 }
 
-int Potentiometer::getValue()
-{
-    int value = adc1_get_raw(this->adc_pin);
-    return value;
+int Potentiometer::getValue(){
+    return this->value;
 }
 
 void Potentiometer::update()
 {
-    int value = getValue();
+    this->value = adc1_get_raw(this->adc_pin);
     //ESP_LOGI(TAG, "update value: %d", value);
 
-    if(this->risingEdge && value > this->threshold){ // Check if the value is above the threshold
-        if(this->onThresholdCallback != nullptr){
+    
+    if(this->risingEdge == true)
+    {
+        if(value > this->threshold && this->thresholdState == false && this->onThresholdCallback != nullptr) // Check if the value is above the threshold
+        {
             this->onThresholdCallback(this->adc_pin, value); // Call the callback
+            this->thresholdState = true; // threshold has been crossed one time
+        } else if (value < this->threshold) {
+            this->thresholdState = false;
         }
-    } else if (!this->risingEdge && value < this->threshold) { // Check if the value is below the threshold
-        if(this->onThresholdCallback != nullptr){
+    } else if (this->risingEdge == false) {
+        if(value < this->threshold && this->thresholdState == false && this->onThresholdCallback != nullptr) // Check if the value is above the threshold
+        {
             this->onThresholdCallback(this->adc_pin, value); // Call the callback
+            this->thresholdState = true; // threshold has been crossed one time
+        } else if (value > this->threshold) {
+            this->thresholdState = false;
         }
     }
 }
