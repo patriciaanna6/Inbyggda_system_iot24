@@ -12,7 +12,7 @@ Button::Button(gpio_num_t pin) : pin(pin), buttonReleased(false), startTickButto
 
 // Initialization method to configure ESP-IDF GPIO settings
 void Button::init() {
-    gpio_config_t buttonConfi;g
+    gpio_config_t buttonConfig;
         buttonConfig.mode = GPIO_MODE_INPUT; //Set as input
         buttonConfig.intr_type = GPIO_INTR_DISABLE; // No delays
         buttonConfig.pin_bit_mask = (1ULL << pin); // Choose the pin

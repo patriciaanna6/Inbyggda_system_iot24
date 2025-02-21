@@ -23,7 +23,7 @@ int Potentiometer::getValue()
 void Potentiometer::update()
 {
     int value = getValue();
-    ESP_LOGI(TAG, "update value: %d", value);
+    //ESP_LOGI(TAG, "update value: %d", value);
 
     if(this->risingEdge && value > this->threshold){ // Check if the value is above the threshold
         if(this->onThresholdCallback != nullptr){

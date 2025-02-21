@@ -26,22 +26,25 @@ void thresholdCrossedCallback(int pin_adc, int value){
 }
 
 extern "C" void app_main(void){
-    //Test for button
+   /*Test for button
     Button myButton(GPIO_NUM_3);
     myButton.init();
-    myButton.setOnPressed(buttonPressedCallback);
+    myButton.setOnPressed(buttonPressedCallback);*/
 
-    /*Test BinaryLed
+    //Test BinaryLed
     ESP_LOGI(TAG, "Init BinaryLed");
     BinaryLed led_B;
     led_B.init(BLINK_GPIO);
-    led_B.blink(1000, 1000); // Blink 1 second on, 1 second off*/
+    led_B.blink(1000, 100); // Blink 1 second on, 1 second off
+
+    led_B.setLed(0);
 
     /*Test AnalogLed
     ESP_LOGI(TAG, "Init AnalogLed");
     AnalogLed led_A;
     led_A.init(SIN_GPIO);
-    led_A.sin(4000); // Sin wave with 4 seconds period (2 seconds up, 2 seconds down)*/
+    led_A.sin(100); // Sin wave with 4 seconds period (2 seconds up, 2 seconds down)
+    led_A.setLed(200);*/
 
     /*Test Potentiometer
     ESP_LOGI(TAG, "Init Potentiometer");
@@ -50,16 +53,11 @@ extern "C" void app_main(void){
     pot.setOnThreshold(2000, true, thresholdCrossedCallback);*/
 
     while(1) {
-        myButton.update();
-        //led_B.update(); //binary_led
+        //myButton.update();
+        led_B.update(); //binary_led
         //led_A.update(); //analog_led
         //pot.update(); //potentiometer
         vTaskDelay(pdMS_TO_TICKS(100));
     }
-
-//init(3);
-//update();
-//setLed(3000, 3000);
-//blink(5000,5000);
 
 }
