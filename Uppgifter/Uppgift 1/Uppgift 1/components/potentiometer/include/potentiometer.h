@@ -5,6 +5,7 @@ class Potentiometer
 {
 private:
     adc1_channel_t adc_pin;
+    int value = 0;
     int threshold = 0;
     bool risingEdge = true;
     bool thresholdState = false;

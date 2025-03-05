@@ -7,25 +7,35 @@
 #include "freertos/task.h"
 #include "driver/gpio.h"
 
-/*#define CONFIG_BLINK_PERIOD 250
-#define BLINK_GPIO (gpio_num_t)4
-#define SIN_GPIO (gpio_num_t)15
-#define POTENTIOMETER_GPIO (adc1_channel_t)ADC1_CHANNEL_6
+//#define CONFIG_BLINK_PERIOD 250
+//#define BLINK_GPIO (gpio_num_t)4
+//#define SIN_GPIO (gpio_num_t)15
+//#define POTENTIOMETER_GPIO (adc1_channel_t)ADC1_CHANNEL_6
 
 static const char *TAG = "example"; //for printing only
 
 //Callback for button
-void buttonPressedCallback(int pin){
+/*void buttonPressedCallback(int pin){
     printf("Hello Philippines\n");
-}
+}*/
 
-void thresholdCrossedCallback(int pin_adc, int value)
+/*void thresholdCrossedCallback(int pin_adc, int value)
 {
     ESP_LOGI("Potentiometer", "Callback: threshold crossed in pin %d\n", pin_adc);
-}
+}*/
 
 extern "C" void app_main(void){
-   //Test for button
+
+    ESP_LOGI(TAG, "Starting main");
+
+    Storage storage;
+    storage.init();
+    storage.setDeviceName("ESP32");
+    storage.setSerialNumber("123456");
+    
+    ESP_LOGI(TAG, "Ending main"); 
+
+   /*Test for button
     Button myButton(GPIO_NUM_3);
     myButton.init();
     myButton.setOnPressed(buttonPressedCallback);
@@ -63,7 +73,7 @@ extern "C" void app_main(void){
         pot.update(); //potentiometer
         ESP_LOGI(TAG, "POT: %d", pot.getValue());
         vTaskDelay(pdMS_TO_TICKS(100));
-    }
+    }*/
     
 
-}*/
+}

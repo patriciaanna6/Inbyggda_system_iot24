@@ -1,105 +1,130 @@
 #include <stdio.h>
 #include <iostream>
-#include <cstring> // For strcpy and strncpy
+#include <cstring>
 #include "configuration.h"
+#include "esp_log.h"
 
-Config::Config() {}
+#define TAG "Storage"
 
-Config::~Config() {
-    nvs_close(nvsHandle); // Close NVS handle when the object is destroyed
+Storage::Storage() {}
+
+Storage::~Storage() {
+    printf("NVS flash closing\n");
+    nvs_close(this->nvsHandle); // Close NVS handle when the object is destroyed
 }
 
-esp_err_t Config::init() {
+esp_err_t Storage::init() {
+    // Initialize NVS
     esp_err_t err = nvs_flash_init();
-    
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        nvs_flash_erase();
+        // NVS partition was truncated and needs to be erased
+        // Retry nvs_flash_init
+        ESP_ERROR_CHECK(nvs_flash_erase());
         err = nvs_flash_init();
     }
-    
+
     if (err != ESP_OK) {
-        std::cerr << "NVS flash init failed: " << esp_err_to_name(err) << std::endl;
+        printf("NVS flash init failed: %s\n", esp_err_to_name(err));
         return err;
     }
 
-    // Open NVS storage
+    // Create NVS handle and open the storage. Exit if it fails
+    nvs_handle_t nvsHandle;
     err = nvs_open("storage", NVS_READWRITE, &nvsHandle);
     if (err != ESP_OK) {
-        std::cerr << "Failed to open NVS: " << esp_err_to_name(err) << std::endl;
+        printf("Failed to open NVS: %s!\n", esp_err_to_name(err));
         return err;
     }
 
-    // Read device name from NVS
-    size_t len = sizeof(deviceName);
-    err = nvs_get_str(nvsHandle, "device_name", deviceName, &len);
-    if (err != ESP_OK) {
-        std::cerr << "Failed to read device name from NVS: " << esp_err_to_name(err) << std::endl;
-        strcpy(deviceName, "default_device"); // Set a default value
+    // Successfully opened NVS
+    printf("NVS opened\n");
+    this->nvsHandle = nvsHandle;
+
+    // Read device name from NVS, or create a default value if it doesn't exist
+    char deviceName[20];
+    size_t nameLength = sizeof(deviceName);
+    err = nvs_get_str(nvsHandle, "device_name", deviceName, &nameLength);
+    switch (err) {
+        case ESP_OK:
+            strncpy(this->deviceName, deviceName, sizeof(this->deviceName));
+            printf("Device name: %s\n", deviceName);
+            break;
+        case ESP_ERR_NVS_NOT_FOUND:
+            printf("Device name: not initialized yet\n");
+            break;
+        default :
+            printf("Device name: error (%s) while reading\n", esp_err_to_name(err));
     }
 
-    // Read serial number from NVS
-    len = sizeof(serialNumber);
-    err = nvs_get_str(nvsHandle, "serial_number", serialNumber, &len);
-    if (err != ESP_OK) {
-        std::cerr << "Failed to read serial number from NVS: " << esp_err_to_name(err) << std::endl;
-        strcpy(serialNumber, "000000"); // Set a default serial number
+    // Read serial number from NVS, or create a default value if it doesn't exist
+    char serialNumber[20];
+    size_t numberLength = sizeof(serialNumber);
+    err = nvs_get_str(nvsHandle, "serial_number", serialNumber, &numberLength);
+    switch (err) {
+        case ESP_OK:
+            strncpy(this->serialNumber, serialNumber, sizeof(this->serialNumber));
+            
+            printf("Serial number: %s\n", deviceName);
+            break;
+        case ESP_ERR_NVS_NOT_FOUND:
+            printf("Serial number: not initialized yet\n");
+            break;
+        default :
+            printf("Serial number: error (%s) while reading\n", esp_err_to_name(err));
     }
 
     return ESP_OK;
 }
 
-const char* Config::getDeviceName() {
-    return deviceName; // Return the device name from memory
+const char* Storage::getDeviceName() {
+    return this->deviceName; // Return the device name from memory
 }
 
-const char* Config::getSerialNumber() {
-    return serialNumber; // Return the serial number from memory
+const char* Storage::getSerialNumber() {
+    return this->serialNumber; // Return the serial number from memory
 }
 
-esp_err_t Config::setDeviceName(const char* newDeviceName) {
-    if (strlen(newDeviceName) >= sizeof(deviceName)) {
-        return ESP_ERR_NVS_INVALID_LENGTH; // Prevent buffer overflow
-    }
 
+esp_err_t Storage::setDeviceName(const char* newDeviceName) {
     // Copy new device name to working memory
-    strncpy(deviceName, newDeviceName, sizeof(deviceName) - 1);
-    deviceName[sizeof(deviceName) - 1] = '\0'; // Null-terminate
+    strncpy(this->deviceName, newDeviceName, 10);
+    this->deviceName[sizeof(this->deviceName) - 1] = '\0'; // Null-terminate
 
     // Save device name to NVS
-    esp_err_t err = nvs_set_str(nvsHandle, "device_name", deviceName);
+    esp_err_t err = nvs_set_str(this->nvsHandle, "device_name", this->deviceName);
     if (err != ESP_OK) {
-        std::cerr << "Failed to set device name in NVS: " << esp_err_to_name(err) << std::endl;
+        printf("setDeviceName: error (%s) while writing\n", esp_err_to_name(err));
         return err;
     }
 
     err = nvs_commit(nvsHandle);
     if (err != ESP_OK) {
-        std::cerr << "Failed to commit device name to NVS: " << esp_err_to_name(err) << std::endl;
+        printf("setDeviceName: failed to commit device name to NVS");
+        return err;
     }
 
-    return err;
+    printf("setDeviceName success. New deviceName: %s\n", this->deviceName);
+    return ESP_OK;
 }
 
-esp_err_t Config::setSerialNumber(const char* newSerialNumber) {
-    if (strlen(newSerialNumber) >= sizeof(serialNumber)) {
-        return ESP_ERR_NVS_INVALID_LENGTH; // Prevent buffer overflow
-    }
+esp_err_t Storage::setSerialNumber(const char* newSerialNumber) {
+    // Copy newSerialNumberto working memory
+    strncpy(this->serialNumber, newSerialNumber, 10);
+    this->serialNumber[sizeof(this->serialNumber) - 1] = '\0'; // Null-terminate
 
-    // Copy new serial number to working memory
-    strncpy(serialNumber, newSerialNumber, sizeof(serialNumber) - 1);
-    serialNumber[sizeof(serialNumber) - 1] = '\0'; // Null-terminate
-
-    // Save serial number to NVS
-    esp_err_t err = nvs_set_str(nvsHandle, "serial_number", serialNumber);
+    // Save device name to NVS
+    esp_err_t err = nvs_set_str(this->nvsHandle, "device_name", this->serialNumber);
     if (err != ESP_OK) {
-        std::cerr << "Failed to set serial number in NVS: " << esp_err_to_name(err) << std::endl;
+        printf("setSerialNumber: error (%s) while writing\n", esp_err_to_name(err));
         return err;
     }
 
     err = nvs_commit(nvsHandle);
     if (err != ESP_OK) {
-        std::cerr << "Failed to commit serial number to NVS: " << esp_err_to_name(err) << std::endl;
+        printf("setSerialNumber: failed to commit device name to NVS");
+        return err;
     }
 
-    return err;
+    printf("setSerialNumber success. New serialNumber: %s\n", this->serialNumber);
+    return ESP_OK;
 }
