@@ -19,7 +19,7 @@ extern "C" void app_main(void)
     ESP_LOGI(TAG, "Ending main");
 
     while(1) {
-        long dist = UltrasonicSensor.Distance();
+        long dist = UltrasonicSensor.measureDistance();
         ESP_LOGI(TAG, "Distance %ld cm", dist);
         if (dist < 10) {
             ESP_LOGI(TAG, "OPENING LOCK");
