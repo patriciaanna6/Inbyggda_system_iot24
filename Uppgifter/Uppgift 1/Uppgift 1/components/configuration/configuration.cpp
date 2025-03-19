@@ -6,6 +6,9 @@
 
 #define TAG "Storage"
 
+#define KEY_DEVICE "keydevice"
+#define KEY_SERIAL "keyserial"
+
 Storage::Storage() {}
 
 Storage::~Storage() {
@@ -41,13 +44,15 @@ esp_err_t Storage::init() {
     this->nvsHandle = nvsHandle;
 
     // Read device name from NVS, or create a default value if it doesn't exist
+    printf("Reading from NVS:\n");
     char deviceName[20];
-    size_t nameLength = sizeof(deviceName);
-    err = nvs_get_str(nvsHandle, "device_name", deviceName, &nameLength);
+    size_t nameLength = sizeof(this->deviceName);
+    err = nvs_get_str(nvsHandle, KEY_DEVICE, this->deviceName, &nameLength); // Read from NVS, and store in deviceName
+    printf("INIT Device name: %s\n", this->deviceName);
     switch (err) {
         case ESP_OK:
             strncpy(this->deviceName, deviceName, sizeof(this->deviceName));
-            printf("Device name: %s\n", deviceName);
+            printf("Device name: %s\n", this->deviceName);
             break;
         case ESP_ERR_NVS_NOT_FOUND:
             printf("Device name: not initialized yet\n");
@@ -59,12 +64,12 @@ esp_err_t Storage::init() {
     // Read serial number from NVS, or create a default value if it doesn't exist
     char serialNumber[20];
     size_t numberLength = sizeof(serialNumber);
-    err = nvs_get_str(nvsHandle, "serial_number", serialNumber, &numberLength);
+    err = nvs_get_str(nvsHandle, KEY_SERIAL, serialNumber, &numberLength); // Read from NVS, and store in serialNumber
     switch (err) {
         case ESP_OK:
             strncpy(this->serialNumber, serialNumber, sizeof(this->serialNumber));
             
-            printf("Serial number: %s\n", deviceName);
+            printf("Serial number: %s\n", serialNumber);
             break;
         case ESP_ERR_NVS_NOT_FOUND:
             printf("Serial number: not initialized yet\n");
@@ -91,7 +96,7 @@ esp_err_t Storage::setDeviceName(const char* newDeviceName) {
     this->deviceName[sizeof(this->deviceName) - 1] = '\0'; // Null-terminate
 
     // Save device name to NVS
-    esp_err_t err = nvs_set_str(this->nvsHandle, "device_name", this->deviceName);
+    esp_err_t err = nvs_set_str(this->nvsHandle, KEY_DEVICE, newDeviceName);
     if (err != ESP_OK) {
         printf("setDeviceName: error (%s) while writing\n", esp_err_to_name(err));
         return err;
@@ -103,7 +108,7 @@ esp_err_t Storage::setDeviceName(const char* newDeviceName) {
         return err;
     }
 
-    printf("setDeviceName success. New deviceName: %s\n", this->deviceName);
+    printf("setDeviceName success. New deviceName: %s\n", newDeviceName);
     return ESP_OK;
 }
 
@@ -113,7 +118,7 @@ esp_err_t Storage::setSerialNumber(const char* newSerialNumber) {
     this->serialNumber[sizeof(this->serialNumber) - 1] = '\0'; // Null-terminate
 
     // Save device name to NVS
-    esp_err_t err = nvs_set_str(this->nvsHandle, "device_name", this->serialNumber);
+    esp_err_t err = nvs_set_str(this->nvsHandle, KEY_SERIAL, this->serialNumber);
     if (err != ESP_OK) {
         printf("setSerialNumber: error (%s) while writing\n", esp_err_to_name(err));
         return err;

@@ -12,7 +12,7 @@
 //#define SIN_GPIO (gpio_num_t)15
 //#define POTENTIOMETER_GPIO (adc1_channel_t)ADC1_CHANNEL_6
 
-static const char *TAG = "example"; //for printing only
+static const char *TAG = "Main"; //for printing only
 
 //Callback for button
 /*void buttonPressedCallback(int pin){
@@ -26,12 +26,13 @@ static const char *TAG = "example"; //for printing only
 
 extern "C" void app_main(void){
 
-    ESP_LOGI(TAG, "Starting main");
+    ESP_LOGI(TAG, "Starting app_main");
 
     Storage storage;
     storage.init();
+
     storage.setDeviceName("ESP32");
-    storage.setSerialNumber("123456");
+    storage.setSerialNumber("1234567");
     
     ESP_LOGI(TAG, "Ending main"); 
 
